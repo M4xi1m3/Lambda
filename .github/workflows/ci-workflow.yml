@@ -15,60 +15,6 @@ on:
         default: 'no'
 
 jobs:
-  android:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: make -j2 PLATFORM=simulator TARGET=android
-      - run: make -j2 PLATFORM=simulator TARGET=android epsilon.official.apk
-      - run: make -j2 PLATFORM=simulator TARGET=android test.apk
-      - uses: actions/upload-artifact@master
-        with:
-          name: epsilon-android.apk
-          path: output/release/simulator/android/epsilon.apk
-  n0100:
-    runs-on: ubuntu-latest
-    steps:
-      - run: sudo apt-get install build-essential imagemagick libfreetype6-dev libjpeg-dev libpng-dev pkg-config
-      - uses: numworks/setup-arm-toolchain@2020-q2
-      - uses: actions/checkout@v2
-      - run: make -j2 MODEL=n0100 epsilon.dfu
-      - run: make -j2 MODEL=n0100 epsilon.onboarding.dfu
-      - run: make -j2 MODEL=n0100 epsilon.official.onboarding.dfu
-      - run: make -j2 MODEL=n0100 epsilon.onboarding.update.dfu
-      - run: make -j2 MODEL=n0100 epsilon.onboarding.beta.dfu
-      - run: make -j2 MODEL=n0100 flasher.light.dfu
-      - run: make -j2 MODEL=n0100 flasher.verbose.dfu
-      - run: make -j2 MODEL=n0100 test.elf
-      - uses: actions/upload-artifact@master
-        with:
-          name: epsilon-n0100.dfu
-          path: output/release/device/n0100/epsilon.dfu
-  n0110:
-    runs-on: ubuntu-latest
-    steps:
-      - run: sudo apt-get install build-essential imagemagick libfreetype6-dev libjpeg-dev libpng-dev pkg-config
-      - uses: numworks/setup-arm-toolchain@2020-q2
-      - uses: actions/checkout@v2
-      - run: make -j2 epsilon.dfu
-      - run: make -j2 epsilon.onboarding.dfu
-      - run: make -j2 epsilon.official.onboarding.dfu
-      - run: make -j2 epsilon.onboarding.update.dfu
-      - run: make -j2 epsilon.onboarding.beta.dfu
-      - run: make -j2 flasher.light.dfu
-      - run: make -j2 flasher.verbose.dfu
-      - run: make -j2 bench.ram.dfu
-      - run: make -j2 bench.flash.dfu
-      - run: make -j2 test.elf
-      - run: make -j2 bootloader
-      - run: make -j2 epsilon.A.dfu epsilon.B.dfu
-      - run: make -j2 epsilon.onboarding.A.dfu epsilon.onboarding.B.dfu
-      - run: make -j2 epsilon.onboarding.update.A.dfu epsilon.onboarding.update.B.dfu
-      - run: make -j2 epsilon.onboarding.beta.A.dfu epsilon.onboarding.beta.B.dfu
-      - uses: actions/upload-artifact@master
-        with:
-          name: epsilon-n0110.dfu
-          path: output/release/device/n0110/epsilon.dfu
   windows:
     runs-on: windows-latest
     defaults:
@@ -77,71 +23,14 @@ jobs:
     steps:
       - uses: msys2/setup-msys2@v2
       - uses: actions/checkout@v2
-      - run: pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-freetype mingw-w64-x86_64-pkg-config make mingw-w64-x86_64-python3 mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-libpng
-      - run: make -j2 PLATFORM=simulator
-      - run: make -j2 PLATFORM=simulator epsilon.official.exe
-      - run: make -j2 PLATFORM=simulator test.exe
+      - run: pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-freetype mingw-w64-x86_64-pkg-config make mingw-w64-x86_64-python3 mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-libpng mingw-w64-x86_64-imagemagick mingw-w64-x86_64-librsvg mingw-w64-x86_64-inkscape
+      - run: make -j2 PLATFORM=simulator Q=
+      - run: make -j2 PLATFORM=simulator Q= epsilon.official.exe
+      - run: make -j2 PLATFORM=simulator Q= test.exe
       - run: cmd /c output\release\simulator\windows\test.exe --headless
       - uses: actions/upload-artifact@master
         with:
           name: epsilon-windows.exe
           path: output/release/simulator/windows/epsilon.exe
-  web:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: numworks/setup-emscripten@v1
-        with:
-          sdk: 1.39.16-fastcomp
-      - uses: actions/checkout@v2
-      - run: make -j2 PLATFORM=simulator TARGET=web
-      - run: make -j2 PLATFORM=simulator TARGET=web epsilon.official.zip
-      - run: make -j2 PLATFORM=simulator TARGET=web test.js
-      - run: node output/release/simulator/web/test.js --headless
-      - uses: actions/upload-artifact@master
-        with:
-          name: epsilon-web.zip
-          path: output/release/simulator/web/epsilon.zip
-  linux:
-    runs-on: ubuntu-latest
-    steps:
-      - run: sudo apt-get install build-essential imagemagick libfreetype6-dev libjpeg-dev libpng-dev pkg-config
-      - uses: actions/checkout@v2
-      - run: make -j2 PLATFORM=simulator
-      - run: make -j2 PLATFORM=simulator epsilon.official.bin
-      - run: make -j2 PLATFORM=simulator test.bin
-      - run: output/release/simulator/linux/test.bin --headless
-      - uses: actions/upload-artifact@master
-        with:
-          name: epsilon-linux.bin
-          path: output/release/simulator/linux/epsilon.bin
-  macos:
-    if: github.event.inputs.triggerMacos == 'yes'
-    runs-on: macOS-latest
-    steps:
-      - run: brew install numworks/tap/epsilon-sdk
-      - uses: actions/checkout@v2
-      - run: make -j2 PLATFORM=simulator
-      - run: make -j2 PLATFORM=simulator epsilon.official.app
-      - run: make -j2 PLATFORM=simulator ARCH=x86_64 test.bin
-      - run: output/release/simulator/macos/x86_64/test.bin --headless
-      - uses: actions/upload-artifact@master
-        with:
-          name: epsilon-macos.zip
-          path: output/release/simulator/macos/epsilon.app
-  ios:
-    if: github.event.inputs.triggerIos == 'yes'
-    runs-on: macOS-latest
-    steps:
-      - run: brew install numworks/tap/epsilon-sdk
-      - uses: actions/checkout@v2
-      - run: make -j2 PLATFORM=simulator TARGET=ios EPSILON_TELEMETRY=0
-      - run: make -j2 PLATFORM=simulator TARGET=ios EPSILON_TELEMETRY=0 epsilon.official.ipa
-      - run: make -j2 PLATFORM=simulator TARGET=ios EPSILON_TELEMETRY=0 test.ipa
-      - run: make -j2 PLATFORM=simulator TARGET=ios EPSILON_TELEMETRY=0 APPLE_PLATFORM=ios-simulator
-      - uses: actions/upload-artifact@master
-        with:
-          name: epsilon-ios.ipa
-          path: output/release/simulator/ios/epsilon.ipa
-
 env:
   ACCEPT_OFFICIAL_TOS: 1
